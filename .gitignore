@@ -128,5 +128,6 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-upload/*
-download/*
+*/media/*
+
+html2pdf.db
