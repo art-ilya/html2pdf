@@ -1,0 +1,56 @@
+version: '3.4'
+
+services:
+
+  nginx:
+    image: nginx:latest
+    build:
+      context: ..
+      dockerfile: docker/nginx/Dockerfile
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - media_data:/html2pdf/media
+    depends_on:
+      - html2pdf_api
+    networks:
+      - net1
+
+  html2pdf_api:
+    image: html2pdf_dev
+    build:
+      context: ..
+      dockerfile: .devcontainer/Dockerfile
+      args:
+        VARIANT: "3.7"
+        NODE_VERSION: "none"
+    volumes:
+      - ..:/workspaces/html2pdf
+      - media_data:/workspaces/html2pdf/html2pdf/media
+    user: vscode
+    command: sleep infinity
+    ports:
+      - "8000:8000"
+    #expose:
+    #  - "8000"
+    networks:
+      - net1
+  
+  redis_broker:
+    image: redis:6.2.2-alpine
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    expose:
+      - "6379"
+    networks:
+      - net1
+
+volumes:
+  db_data: null
+  media_data: null
+  redis_data: null
+
+networks:
+  net1: null

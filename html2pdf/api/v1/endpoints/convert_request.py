@@ -9,6 +9,7 @@ from pydantic import HttpUrl
 from schemas.common import responses
 from schemas.convert_request import ConvertRequest, ConvertRequestCreate
 from sqlalchemy.ext.asyncio import AsyncSession
+from workers.convert import convert_task
 
 router = APIRouter(
     prefix="/convert_requests",
@@ -27,7 +28,9 @@ async def create_convert_request_url(
     data_in = ConvertRequestCreate(source_type=SOURCE_TYPE.url, source=url)
     result = await crud.create_convert_request(db, data_in)
     await db.commit()
-
+    
+    task = convert_task.send(uid=str(result.id))
+    
     return result
 
 
@@ -42,18 +45,20 @@ async def create_convert_request_file(
     db: AsyncSession = Depends(get_db_session),
 ):
     data_in = ConvertRequestCreate(
-        source_type=SOURCE_TYPE.file, source=str(saved_html_path)
+        source_type=SOURCE_TYPE.file, source=str(saved_html_path.name)
     )
     result = await crud.create_convert_request(db, data_in)
     await db.commit()
 
+    task = convert_task.send(uid=str(result.id))
+    
     return result
 
 
 @router.get(
     "/{request_id}",
     response_model=ConvertRequest,
-    responses={**responses},
+    responses={404: responses[404]},
 )
 async def get_convert_request(
     request_id: UUID, db: AsyncSession = Depends(get_db_session)
@@ -61,5 +66,5 @@ async def get_convert_request(
     result = await crud.get(db, id=request_id)
     if result is None:
         raise HTTPException(status_code=404)
-
+    
     return result

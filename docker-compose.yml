@@ -1,0 +1,82 @@
+version: '3.4'
+
+services:
+
+  nginx:
+    image: nginx:latest
+    build:
+      context: .
+      dockerfile: docker/nginx/Dockerfile
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - media_data:/html2pdf/media
+    depends_on:
+      - html2pdf_api
+    networks:
+      - net1
+
+  html2pdf_api:
+    image: html2pdf_api:latest
+    build:
+      context: .
+      dockerfile: docker/api/Dockerfile
+    env_file: docker/common/dev.env
+    restart: unless-stopped
+    depends_on:
+      - redis_broker
+    volumes:
+      - media_data:/html2pdf/media
+      - .:/html2pdf/html2pdf.db
+    command:
+      [
+        "uvicorn",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8000",
+        "main:app"
+      ]
+    expose:
+      - "8000"
+    networks:
+      - net1
+
+  html2pdf_workers:
+    image: html2pdf_workers:latest
+    build:
+      context: .
+      dockerfile: docker/workers/Dockerfile
+    env_file: docker/common/dev.env
+    restart: unless-stopped
+    depends_on:
+      - redis_broker
+    volumes:
+      - media_data:/html2pdf/media
+      - .:/html2pdf/html2pdf.db
+    command:
+      [
+        "dramatiq",
+        "workers",
+      ]
+    networks:
+      - net1
+
+  redis_broker:
+    image: redis:6.2.2-alpine
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    expose:
+      - "6379"
+    networks:
+      - net1
+
+volumes:
+  #db_data: null
+  media_data: null
+  redis_data: null
+
+networks:
+  net1: null

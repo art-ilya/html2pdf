@@ -1,7 +1,8 @@
 from fastapi import FastAPI
+
 from api.v1 import api
-from settings import config
 from db.init_db import try_init_db
+from settings import config
 
 
 def create_app() -> FastAPI:

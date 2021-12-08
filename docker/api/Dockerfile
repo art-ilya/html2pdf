@@ -8,5 +8,3 @@ WORKDIR /html2pdf
 COPY ./html2pdf/requirements.txt .
 RUN pip install -r requirements.txt
 COPY ./html2pdf .
-
-ENTRYPOINT ["./start_server.sh"]
