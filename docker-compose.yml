@@ -28,7 +28,7 @@ services:
       - redis_broker
     volumes:
       - media_data:/html2pdf/media
-      - .:/html2pdf/html2pdf.db
+      - ./db:/html2pdf/_db
     command:
       [
         "uvicorn",
@@ -54,7 +54,7 @@ services:
       - redis_broker
     volumes:
       - media_data:/html2pdf/media
-      - .:/html2pdf/html2pdf.db
+      - ./db:/html2pdf/_db
     command:
       [
         "dramatiq",
@@ -74,7 +74,7 @@ services:
       - net1
 
 volumes:
-  #db_data: null
+  db_data: null
   media_data: null
   redis_data: null
 
